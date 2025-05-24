@@ -1,18 +1,18 @@
 # Price Comparator Backend
 
-A Spring Boot application that helps users compare product prices across multiple grocery stores, track price history, manage shopping carts, and receive custom price alerts. This README provides an overview of the project, key features, architecture, setup instructions, and API reference.
+A Spring Boot application that helps users compare product prices across multiple grocery stores, track price history, manage shopping carts, and receive custom price alerts.
 
 ## Project Description
 
-Price Comparator Backend ingests product and discount data from CSV files, stores it in a PostgreSQL database, and exposes RESTful APIs for:
+**Price Comparator Backend** processes CSV data for products and discounts, stores it in PostgreSQL, and exposes REST APIs for:
 
-* **User Authentication**: Register and login using JWT-based security.
-* **Shopping Cart**: Add/remove items in a single cart scoped to each user.
-* **Price Optimization**: Determine the lowest price per item across stores and group results by store.
-* **Best & New Discounts**: Query current top percentage discounts and those added in the past 24 hours.
-* **Price History**: Retrieve time-series price data for products, filterable by store, category, or brand.
-* **Recommendations**: Compute and compare value-per-unit (e.g., RON/kg or RON/l) to highlight best buys.
-* **Custom Price Alerts**: Users set target prices for products and receive email notifications when prices fall below thresholds.
+* **User Authentication**: Register & login with JWT.
+* **Shopping Cart**: Single cart per user to add/remove items.
+* **Price Optimization**: Assign each cart item to the store offering the lowest price.
+* **Best & New Discounts**: Query top percentage discounts and those added in the last 24h.
+* **Price History**: Retrieve time-series price points for products, filterable by store/category/brand.
+* **Recommendations**: Compute price-per-unit (e.g., RON/kg) to highlight best buys.
+* **Custom Price Alerts**: Users set target prices and receive email notifications when met.
 
 ## Architecture & Modules
 
@@ -21,104 +21,137 @@ src/
 ├── controller/            # REST controllers
 ├── service/               # Business logic interfaces & implementations
 ├── repository/            # Spring Data JPA repositories
-├── domain/                # JPA entity models
-├── dto/                   # Request and response DTOs
-├── scheduler/             # Scheduled tasks (price-alert checks)
-├── security/              # JWT and Spring Security configuration
-├── config/                # Application configuration (e.g. mail)
+├── domain/                # JPA entities
+├── dto/                   # Request & response DTOs
+├── scheduler/             # Scheduled tasks (alerts)
+├── security/              # JWT & Spring Security config
+├── config/                # App configuration
 └── resources/
-    └── application.yml    # Data source, mail, and scheduler settings
+    └── application.yml    # DB, mail, scheduler settings (see below)
 ```
 
-## Setup Instructions
+## Configuration Example
+
+Rename `application.yml` to `application.yaml` (or `.yml`) and **do not commit** with secrets. Create an `application.yaml` (or override via `application-{profile}.yaml` or env vars):
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/price_comparator
+    username: your_db_user
+    password: your_db_pass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+mail:
+  host: smtp.gmail.com
+  port: 587
+  username: your_gmail_email
+  password: your_gmail_password
+  protocol: smtp
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls.enable: true
+
+alerts:
+  check:
+    interval: 300000
+```
+
+## Sample CSV Files
+
+Products CSV (`lidl_2025-05-01.csv`):
+
+```csv
+product_id;product_name;product_category;brand;package_quantity;package_unit;price;currency
+P001;Lapte Zuzu;lactate;Zuzu;1.0;l;9.90;RON
+P002;Iaurt Grecesc;lactate;Lidl;0.4;kg;11.50;RON
+P003;Ouă Mărimea M;ouă;Lidl;10;buc;13.20;RON
+```
+
+Discounts CSV (`lidl_discount_2025-05-01.csv`):
+
+```csv
+product_id;product_name;product_category;brand;package_quantity;package_unit;from_date;to_date;percentage_of_discount
+P002;Iaurt Grecesc;lactate;Lidl;0.4;kg;2025-05-01;2025-05-07;15
+P003;Ouă Mărimea M;ouă;Lidl;10;buc;2025-05-01;2025-05-05;10
+```
+
+## Setup & Run
 
 1. **Clone & Build**
 
+```bash
+git clone [https://github.com/your-org/price-comparator-backend.git](https://github.com/your-org/price-comparator-backend.git)
+cd price-comparator-backend
+mvn clean package
+```
+
+2. **Configure**
+   - Create `application.yaml` as above.
+   - Set environment variables for mail.
+
+3. **Run**
    ```bash
-   git clone https://github.com/your-org/price-comparator-backend.git
-   cd price-comparator-backend
-   mvn clean package
-   ```
+mvn spring-boot:run
+````
 
-2. **Configure Database**
+4. **Import Data**
 
-    * Create a PostgreSQL database (e.g., `price_comparator`).
-    * In `src/main/resources/application.yml`, set `spring.datasource.url`, `username`, and `password`.
+```bash
+# Products
+curl -X POST http://localhost:8080/import/prices \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "files=@lidl_2025-05-01.csv"
 
-3. **Configure Email**
+# Discounts
+curl -X POST http://localhost:8080/import/discounts \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "files=@lidl_discount_2025-05-01.csv"
+```
 
-    * Obtain a Gmail App Password and set environment variables:
+## Key Endpoints
 
-      ```bash
-      export GMAIL_USER=youremail@gmail.com
-      export GMAIL_APP_PASSWORD=your_app_password
-      ```
-    * Or update `spring.mail` properties in `application.yml`.
+### Auth
 
-4. **Run the Application**
+* `POST /auth/register`
+* `POST /auth/login`
 
-   ```bash
-   mvn spring-boot:run
-   ```
+### Cart
 
-5. **Import Sample Data**
-
-    * Upload product CSVs:
-
-      ```bash
-      curl -X POST http://localhost:8080/import/prices \
-        -H "Authorization: Bearer $TOKEN" \
-        -F "files=@lidl_2025-05-01.csv" \
-        -F "files=@kaufland_2025-05-02.csv" \
-        -F "files=@profi_2025-05-03.csv"
-      ```
-    * Upload discount CSVs:
-
-      ```bash
-      curl -X POST http://localhost:8080/import/discounts \
-        -H "Authorization: Bearer $TOKEN" \
-        -F "files=@lidl_discount_2025-05-01.csv" \
-        -F "files=@kaufland_discount_2025-05-02.csv"
-      ```
-
-## Key API Endpoints
-
-### Authentication
-
-* `POST /auth/register` – user signup
-* `POST /auth/login` – returns JWT
-
-### Shopping Cart
-
-* `GET /cart` – view or create user cart
-* `POST /cart/items` – add item
-* `DELETE /cart/items/{itemId}` – remove item
-* `DELETE /cart` – clear cart
-* `GET /cart/optimize` – split cart by lowest price per store
+* `GET /cart`
+* `POST /cart/items`
+* `DELETE /cart/items/{id}`
+* `DELETE /cart`
+* `GET /cart/optimize`
 
 ### Discounts
 
-* `GET /discounts/best?limit=N` – top N active discounts
-* `GET /discounts/new` – discounts added in last 24h
+* `GET /discounts/best?limit=N`
+* `GET /discounts/new`
 
 ### Price History
 
-* `GET /products/{id}/history?store=&category=&brand=` – time-series points
+* `GET /products/{id}/history?store=&category=&brand=`
 
 ### Recommendations
 
-* `GET /products/recommendations?category=&brand=` – value-per-unit comparisons
+* `GET /products/recommendations?category=&brand=`
 
-### Price Alerts
+### Alerts
 
-* `POST /alerts` – create or reactivate alert
-* `GET /alerts` – list user alerts
-* `DELETE /alerts/{id}` – disable alert
+* `POST /alerts`
+* `GET /alerts`
+* `DELETE /alerts/{id}`
 
-## Scheduled Jobs
+## Scheduler
 
-* **Price Alert Checker** runs every 5 minutes (configurable via `alerts.check.interval`), compares effective prices (including discounts) against active alerts, sends email notifications, and deactivates triggered alerts.
+Price alerts are checked every 5 minutes (`alerts.check.interval`).
 
 ---
 
-For detailed examples and code snippets, refer to the Javadoc and inline comments in each package. Enjoy optimizing your shopping costs!
+Feel free to tweak the configuration samples and CSV examples as needed.
