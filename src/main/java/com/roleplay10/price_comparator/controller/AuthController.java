@@ -25,6 +25,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest req) {
         JwtResponse jwt = userService.login(req);
-        return ResponseEntity.ok(jwt);
+        return !jwt.getToken().isEmpty() ? ResponseEntity.ok(jwt) : ResponseEntity.badRequest().build();
     }
 }

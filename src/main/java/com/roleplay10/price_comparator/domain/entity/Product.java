@@ -16,8 +16,8 @@ import java.math.BigDecimal;
 @Builder
 public class Product {
     @Id
-    @GeneratedValue
-    private java.util.UUID id;
+    @Column(length = 10)
+    private String id;
 
     @Column(nullable = false, length = 200)
     private String name;

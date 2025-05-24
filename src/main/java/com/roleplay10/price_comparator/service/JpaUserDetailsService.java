@@ -21,7 +21,7 @@ public class JpaUserDetailsService implements UserDetailsService {
         return User.builder()
                 .username(user.getUsername())
                 .password(user.getPasswordHash())
-                .authorities(List.of())  // add roles if you want
+                .authorities(List.of())
                 .build();
     }
 

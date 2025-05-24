@@ -17,13 +17,12 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    private final long EXP_MS = 24 * 60 * 60 * 1000;
+    private final long EXP_MS = 60 * 60 * 1000;
 
     private Key key() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // ← rename/remove the old method that takes UserDetails
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)

@@ -9,20 +9,16 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "shopping_list_item",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"list_id","product_id"}))
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ShoppingListItem {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Table(name = "shopping_cart_item",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"cart_id","product_id"}))
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
+public class ShoppingCartItem {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "list_id", nullable = false)
-    private ShoppingList list;
+    @JoinColumn(name = "cart_id", nullable = false)
+    private ShoppingCart cart;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
