@@ -86,9 +86,10 @@ P003;Ouă Mărimea M;ouă;Lidl;10;buc;2025-05-01;2025-05-05;10
 1. **Clone & Build**
 
 ```bash
-git clone [https://github.com/your-org/price-comparator-backend.git](https://github.com/your-org/price-comparator-backend.git)
+git clone [https://github.com/Roleplay10/Price-Comparator-Backend.git](https://github.com/Roleplay10/Price-Comparator-Backend.git)
 cd price-comparator-backend
 mvn clean package
+
 ```
 
 2. **Configure**
@@ -96,7 +97,7 @@ mvn clean package
    - Set environment variables for mail.
 
 3. **Run**
-   ```bash
+```bash
 mvn spring-boot:run
 ````
 
