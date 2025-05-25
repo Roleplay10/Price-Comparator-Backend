@@ -32,12 +32,12 @@ src/
 
 ## Configuration Example
 
-Rename `application.yml` to `application.yaml` (or `.yml`) and **do not commit** with secrets. Create an `application.yaml` (or override via `application-{profile}.yaml` or env vars):
+Create `application.yml` in the root directory after this model:
 
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/price_comparator
+    url: jdbc:postgresql://localhost:5432/price_comparator (or your db url)
     username: your_db_user
     password: your_db_pass
   jpa:
@@ -68,17 +68,17 @@ Products CSV (`lidl_2025-05-01.csv`):
 
 ```csv
 product_id;product_name;product_category;brand;package_quantity;package_unit;price;currency
-P001;Lapte Zuzu;lactate;Zuzu;1.0;l;9.90;RON
-P002;Iaurt Grecesc;lactate;Lidl;0.4;kg;11.50;RON
-P003;Ouă Mărimea M;ouă;Lidl;10;buc;13.20;RON
+P001;lapte zuzu;lactate;Zuzu;1.0;l;9.90;RON
+P002;iaurt grecesc;lactate;Lidl;0.4;kg;11.50;RON
+P003;ouă mărimea m;ouă;Lidl;10;buc;13.20;RON
 ```
 
-Discounts CSV (`lidl_discount_2025-05-01.csv`):
+Discounts CSV (`lidl_discounts_2025-05-01.csv`):
 
 ```csv
 product_id;product_name;product_category;brand;package_quantity;package_unit;from_date;to_date;percentage_of_discount
-P002;Iaurt Grecesc;lactate;Lidl;0.4;kg;2025-05-01;2025-05-07;15
-P003;Ouă Mărimea M;ouă;Lidl;10;buc;2025-05-01;2025-05-05;10
+P002;iaurt grecesc;lactate;Lidl;0.4;kg;2025-05-01;2025-05-07;15
+P003;ouă mărimea m;ouă;Lidl;10;buc;2025-05-01;2025-05-05;10
 ```
 
 ## Setup & Run
@@ -112,7 +112,7 @@ curl -X POST http://localhost:8080/import/prices \
 # Discounts
 curl -X POST http://localhost:8080/import/discounts \
   -H "Authorization: Bearer $TOKEN" \
-  -F "files=@lidl_discount_2025-05-01.csv"
+  -F "files=@lidl_discounts_2025-05-01.csv"
 ```
 
 ## Key Endpoints
